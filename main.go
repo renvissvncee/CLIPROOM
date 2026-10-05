@@ -13,20 +13,19 @@ var userRepository *repository.UserRepository = repository.NewUserRepository(db)
 var userService *service.UserService = service.NewUserService(userRepository)
 
 func main() {
-	userService.CreateUser(
+	fmt.Println(userService.CreateUser(
 		"renvissvnce",
 		"123",
 		"tyomafrutis@mail.ru",
 		"Артем",
 		20,
-	)
-	userService.CreateUser(
+	))
+	fmt.Println(userService.CreateUser(
 		"renvissvnce21",
 		"123",
-		"tyomafrutis@mail.ru",
+		"tyomafrutis21@mail.ru",
 		"Темыч",
 		20,
-	)
-
-	fmt.Println(userService.GetUserById(1))
+	))
+	fmt.Println(userService.GetUserByEmail("tyomafrutis@mail.ru"))
 }

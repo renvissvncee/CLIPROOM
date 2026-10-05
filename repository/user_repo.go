@@ -33,14 +33,24 @@ func (usrepo *UserRepository) FindUserByLogin(login string) (models.User, error)
 			return value, nil
 		}
 	}
-	return models.User{}, errors.New("Пользователь не найден")
+	return models.User{}, errors.New("Пользователь с данным логином не найден")
 }
 
 func (usrepo *UserRepository) FindUserById(id uint) (models.User, error) {
 	if user, ok := usrepo.storage.Users[id]; ok {
 		return user, nil
 	}
-	return models.User{}, errors.New("Пользователь не найден")
+	return models.User{}, errors.New("Пользователь с данным id не найден")
+}
+
+func (usrepo *UserRepository) FindUserByEmail(email string) (models.User, error) {
+	userMap := usrepo.storage.Users
+	for _, value := range userMap {
+		if value.Email == email {
+			return value, nil
+		}
+	}
+	return models.User{}, errors.New("Пользователь с данной эл. почтой не найден")
 }
 
 func (usrepo *UserRepository) NextUserId() uint {

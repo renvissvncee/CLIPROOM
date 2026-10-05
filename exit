@@ -1,0 +1,29 @@
+[33mcommit 925b659eaf66f2abbeb5be30589b89e4e5e3dbb9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: Дружинин Артем <tyomafrutis@mail.ru>
+Date:   Mon Oct 5 21:18:02 2026 +0300
+
+    fix(user): логику добавления пользователя
+
+[33mcommit 62dc01e30792e9313b99ce89c7ad57c73c7e6090[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Дружинин Артем <tyomafrutis@mail.ru>
+Date:   Mon Oct 5 17:42:11 2026 +0300
+
+    feat(user): реализован поиск: по логину и id; сохранение пользователя
+
+[33mcommit 2b40cb88757b2029c54423c593b98d94f1e26030[m
+Author: Дружинин Артем <tyomafrutis@mail.ru>
+Date:   Mon Oct 5 09:01:45 2026 +0300
+
+    add: User logic начало
+
+[33mcommit 666fab41fd1aecd9464bc8875d56206c2aab68bc[m
+Author: Дружинин Артем <tyomafrutis@mail.ru>
+Date:   Fri Oct 2 15:49:59 2026 +0300
+
+    day 1 add: first layers
+
+[33mcommit fc11992a29fbe2d5c856c9ae991eeafadb0b87b7[m
+Author: renvissvnce <73397624+renvissvncee@users.noreply.github.com>
+Date:   Thu Oct 1 17:23:02 2026 +0300
+
+    Initial commit
