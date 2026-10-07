@@ -1,7 +1,7 @@
 package models
 
 type User struct {
-	Id       uint
+	ID       uint
 	Login    string
 	Password string // пока без хэширования и обработки ошибок
 	Email    string

@@ -8,6 +8,7 @@ import (
 type Storage struct {
 	Users map[uint]models.User
 	Clips map[uint]models.Clip
+	// возможно, после, нужно будет поле UsersByLogin, где ключ - логин
 
 	UserClips map[uint]uint
 

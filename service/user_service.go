@@ -16,31 +16,98 @@ func NewUserService(p_repositroy *repository.UserRepository) *UserService {
 	return &UserService{userRepository: p_repositroy}
 }
 
+func (usserv *UserService) userIsTaken(find func() (models.User, error), excludeId uint) (bool, error) {
+	user, err := find()
+	if errors.Is(err, repository.ErrNotFound) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return user.ID != excludeId, nil
+}
+
+// VALIDATE-функции
+
+func (usserv *UserService) validateLogin(login string) error {
+	if login == "" {
+		return errors.New("Логин не может быть пустым")
+	} else if len(login) < 3 || len(login) > 30 {
+		return errors.New("Логин должен быть верной длины: 3 <= login <= 30")
+	}
+	return nil
+}
+
+func (usserv *UserService) validateEmail(email string) error {
+	if email == "" {
+		return errors.New("Эл. почта не может быть пустой")
+	} else if !strings.Contains(email, "@") {
+		return errors.New("Неверный формат эл. почты")
+	}
+	return nil
+}
+
+func (usserv *UserService) validatePassword(password string) error {
+	if password == "" {
+		return errors.New("Пароль не может быть пустым")
+	} else if len(password) < 3 {
+		return errors.New("Пароль не может быть меньше 3 символов")
+	}
+	return nil
+}
+
+func (usserv *UserService) validateName(name string) error {
+	if strings.ContainsAny(name, "0123456789!@#$%^&*()_+~`./,{}[];:<>") {
+		return errors.New("Имя не должно содержать чисел и(или) специальных символов")
+	}
+	return nil
+}
+
+// Пока пустой, потому что любой возраст подходит
+func (usserv *UserService) validateAge(age uint) error {
+	return nil
+}
+
+// CREATE-функции
+
 func (usserv *UserService) CreateUser(login, password, email, name string, age uint) (models.User, error) {
 	// Валидация логина
-	if login == "" {
-		return models.User{}, errors.New("Логин не может быть пустым")
-	} else if len(login) < 3 || len(login) > 30 {
-		return models.User{}, errors.New("Логин должен быть верной длины: 3 <= login <= 30")
-	} else if _, err := usserv.userRepository.FindUserByLogin(login); err == nil {
-		return models.User{}, errors.New("Пользователь с данным логином уже существует")
+	if err := usserv.validateLogin(login); err != nil {
+		return models.User{}, err
 	}
 	// Валидация пароля
-	if password == "" {
-		return models.User{}, errors.New("Пароль не может быть пустым")
-	} else if len(password) < 3 {
-		return models.User{}, errors.New("Пароль не может быть меньше 3 символов")
+	if err := usserv.validatePassword(password); err != nil {
+		return models.User{}, err
 	}
 	// Валидация почты
-	if !strings.Contains(email, "@") {
-		return models.User{}, errors.New("Неверный формат эл. почты")
-	} else if _, err := usserv.userRepository.FindUserByEmail(email); err == nil {
-		return models.User{}, errors.New("Пользователь с данной эл. почтой уже существует")
+	if err := usserv.validateEmail(email); err != nil {
+		return models.User{}, err
+	}
+	// Валидация имени
+	if err := usserv.validateName(name); err != nil {
+		return models.User{}, err
 	}
 
 	id := usserv.userRepository.NextUserId()
+	// Проверка уникальности:
+	if ok, err := usserv.userIsTaken(func() (models.User, error) {
+		return usserv.userRepository.FindUserByLogin(login)
+	}, id); ok == false && err != nil {
+		return models.User{}, err
+	} else if ok == true && err == nil {
+		return models.User{}, ErrLoginTaken
+	}
+
+	if ok, err := usserv.userIsTaken(func() (models.User, error) {
+		return usserv.userRepository.FindUserByEmail(email)
+	}, id); ok == false && err != nil {
+		return models.User{}, err
+	} else if ok == true && err == nil {
+		return models.User{}, ErrEmailTaken
+	}
+
 	newUser := models.User{
-		Id:       id,
+		ID:       id,
 		Login:    login,
 		Password: password,
 		Email:    email,
@@ -48,34 +115,112 @@ func (usserv *UserService) CreateUser(login, password, email, name string, age u
 		Age:      age,
 	}
 
-	err := usserv.userRepository.AddUser(&newUser)
+	err := usserv.userRepository.SaveUser(&newUser)
 	if err != nil {
 		return models.User{}, err
 	}
 	return newUser, nil
 }
 
-func (usserv *UserService) GetUserByLogin(login string) (models.User, error) {
-	if login == "" {
-		return models.User{}, errors.New("Логин не может быть пустым")
-	} else if len(login) < 3 || len(login) > 30 {
-		return models.User{}, errors.New("Логин должен быть верной длины: 3 <= login <= 30")
+// READ-функции
+
+func (usserv *UserService) fetchUser(find func() (models.User, error)) (models.User, error) {
+	user, err := find()
+	if errors.Is(err, repository.ErrNotFound) {
+		return models.User{}, ErrUserNotFound
 	}
-	return usserv.userRepository.FindUserByLogin(login)
+	if err != nil {
+		return models.User{}, err
+	}
+	return user, nil
+}
+
+func (usserv *UserService) GetUserByLogin(login string) (models.User, error) {
+	// Валидация полученного логина
+	if err := usserv.validateLogin(login); err != nil {
+		return models.User{}, err
+	}
+
+	return usserv.fetchUser(func() (models.User, error) {
+		return usserv.userRepository.FindUserByLogin(login)
+	})
 }
 
 func (usserv *UserService) GetUserById(id uint) (models.User, error) {
+	// Валидация полученного Id
 	if id == 0 {
 		return models.User{}, errors.New("Id не может быть равен 0")
 	}
-	return usserv.userRepository.FindUserById(id)
+
+	return usserv.fetchUser(func() (models.User, error) {
+		return usserv.userRepository.FindUserById(id)
+	})
 }
 
 func (usserv *UserService) GetUserByEmail(email string) (models.User, error) {
-	if email == "" {
-		return models.User{}, errors.New("Эл. почта не может быть пустым")
-	} else if !strings.Contains(email, "@") {
-		return models.User{}, errors.New("Неверный формат эл. почты")
+	// Валидация полученной эл. почты
+	if err := usserv.validateEmail(email); err != nil {
+		return models.User{}, err
 	}
-	return usserv.userRepository.FindUserByEmail(email)
+
+	return usserv.fetchUser(func() (models.User, error) {
+		return usserv.userRepository.FindUserByEmail(email)
+	})
+}
+
+// UPDATE-функции
+
+func (usserv *UserService) UpdateUserInfo(id uint, newLogin, newEmail, newName *string, newAge *uint) (models.User, error) {
+	// Получим копию юзера, которую будем менять
+	user, err := usserv.userRepository.FindUserById(id)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	// Валидация поступивших данных
+	if newLogin != nil {
+		if err := usserv.validateLogin(*newLogin); err != nil {
+			return models.User{}, err
+		}
+		user.Login = *newLogin
+	}
+	if newEmail != nil {
+		if err := usserv.validateEmail(*newEmail); err != nil {
+			return models.User{}, err
+		}
+		user.Email = *newEmail
+	}
+	if newName != nil {
+		if err := usserv.validateName(*newName); err != nil {
+			return models.User{}, err
+		}
+		user.Name = *newName
+	}
+	if newAge != nil {
+		if err := usserv.validateAge(*newAge); err != nil {
+			return models.User{}, err
+		}
+		user.Age = *newAge
+	}
+
+	// Проверка уникальности:
+	if ok, err := usserv.userIsTaken(func() (models.User, error) {
+		return usserv.userRepository.FindUserByLogin(*newLogin)
+	}, id); ok == false && err != nil {
+		return models.User{}, err
+	} else if ok == true && err == nil {
+		return models.User{}, ErrLoginTaken
+	}
+
+	if ok, err := usserv.userIsTaken(func() (models.User, error) {
+		return usserv.userRepository.FindUserByEmail(*newEmail)
+	}, id); ok == false && err != nil {
+		return models.User{}, err
+	} else if ok == true && err == nil {
+		return models.User{}, ErrEmailTaken
+	}
+
+	usserv.userRepository.SaveUser(&user)
+
+	return user, nil
 }
