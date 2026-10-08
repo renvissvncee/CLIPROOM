@@ -10,7 +10,7 @@ type Storage struct {
 	Clips map[uint]models.Clip
 	// возможно, после, нужно будет поле UsersByLogin, где ключ - логин
 
-	UserClips map[uint]uint
+	UserClips map[uint]map[uint]struct{}
 
 	nextUserId uint
 	nextClipId uint
@@ -29,5 +29,11 @@ func NewStorage() *Storage {
 func (p_s *Storage) NextUserId() uint {
 	id := p_s.nextUserId
 	p_s.nextUserId++
+	return id
+}
+
+func (p_s *Storage) NextClipId() uint {
+	id := p_s.nextClipId
+	p_s.nextClipId++
 	return id
 }

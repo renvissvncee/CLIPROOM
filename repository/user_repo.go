@@ -34,19 +34,19 @@ func (r *UserRepository) SaveUser(user *models.User) error {
 
 // READ-функции
 
+func (r *UserRepository) FindUserById(id uint) (models.User, error) {
+	if user, ok := r.storage.Users[id]; ok {
+		return user, nil
+	}
+	return models.User{}, ErrNotFound
+}
+
 func (r *UserRepository) FindUserByLogin(login string) (models.User, error) {
 	userMap := r.storage.Users
 	for _, value := range userMap {
 		if value.Login == login {
 			return value, nil
 		}
-	}
-	return models.User{}, ErrNotFound
-}
-
-func (r *UserRepository) FindUserById(id uint) (models.User, error) {
-	if user, ok := r.storage.Users[id]; ok {
-		return user, nil
 	}
 	return models.User{}, ErrNotFound
 }
@@ -68,6 +68,8 @@ func (r *UserRepository) FindAllUsers() ([]models.User, error) {
 	}
 	return usersSlice, nil
 }
+
+// DELETE-функции
 
 func (r *UserRepository) DeleteUser(id uint) error {
 	userMap := r.storage.Users

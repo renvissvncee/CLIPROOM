@@ -1,15 +1,15 @@
 package models
 
 type Clip struct {
-	id          int
-	title       string
-	artist      string
-	description string
+	ID          uint
+	Title       string
+	Artist      string
+	Description string
 
-	likes uint
+	Likes uint
 
-	tags  []string
-	moods []string
+	Tags  []string
+	Moods []string
 
-	link string
+	Link string
 }
