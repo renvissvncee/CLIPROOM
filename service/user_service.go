@@ -50,7 +50,7 @@ func (usserv *UserService) ensureEmailFree(email string, excludeId uint) error {
 	if err != nil {
 		return err
 	} else if taken {
-		return ErrLoginTaken
+		return ErrEmailTaken
 	}
 	return nil
 }
@@ -207,7 +207,7 @@ func (usserv *UserService) UpdateUserInfo(id uint,
 		}
 
 		// Проверка уникальности:
-		if err := usserv.ensureLoginFree(*newLogin, noExcludeId); err != nil {
+		if err := usserv.ensureLoginFree(*newLogin, id); err != nil {
 			return models.User{}, err
 		}
 
@@ -219,7 +219,7 @@ func (usserv *UserService) UpdateUserInfo(id uint,
 		}
 
 		// Проверка уникальности:
-		if err := usserv.ensureEmailFree(*newEmail, noExcludeId); err != nil {
+		if err := usserv.ensureEmailFree(*newEmail, id); err != nil {
 			return models.User{}, err
 		}
 		user.Email = *newEmail

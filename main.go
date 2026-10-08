@@ -27,7 +27,7 @@ func main() {
 		"Темыч",
 		20,
 	))
-	newLogin := "renvissvnce34"
+	newLogin := "renvissvnce21"
 	newEmail := "tyomafrutis@mail.ru"
 	fmt.Println(userService.UpdateUserInfo(2, &newLogin, &newEmail, nil, nil))
 	fmt.Println(userService.GetUserById(2))
