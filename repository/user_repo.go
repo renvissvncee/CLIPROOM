@@ -15,27 +15,27 @@ func NewUserRepository(p_storage *storage.Storage) *UserRepository {
 	return &UserRepository{storage: p_storage}
 }
 
-func (usrepo *UserRepository) NextUserId() uint {
-	return usrepo.storage.NextUserId()
+func (r *UserRepository) NextUserId() uint {
+	return r.storage.NextUserId()
 }
 
 // CREATE-функции
 
-func (usrepo *UserRepository) SaveUser(user *models.User) error {
+func (r *UserRepository) SaveUser(user *models.User) error {
 	if user == nil {
 		return errors.New("Ссылка на пользователя не найдена")
 	}
 	if user.ID <= 0 {
 		return errors.New("Id пользователя не может быть <= 0")
 	}
-	usrepo.storage.Users[user.ID] = *user
+	r.storage.Users[user.ID] = *user
 	return nil
 }
 
 // READ-функции
 
-func (usrepo *UserRepository) FindUserByLogin(login string) (models.User, error) {
-	userMap := usrepo.storage.Users
+func (r *UserRepository) FindUserByLogin(login string) (models.User, error) {
+	userMap := r.storage.Users
 	for _, value := range userMap {
 		if value.Login == login {
 			return value, nil
@@ -44,19 +44,36 @@ func (usrepo *UserRepository) FindUserByLogin(login string) (models.User, error)
 	return models.User{}, ErrNotFound
 }
 
-func (usrepo *UserRepository) FindUserById(id uint) (models.User, error) {
-	if user, ok := usrepo.storage.Users[id]; ok {
+func (r *UserRepository) FindUserById(id uint) (models.User, error) {
+	if user, ok := r.storage.Users[id]; ok {
 		return user, nil
 	}
 	return models.User{}, ErrNotFound
 }
 
-func (usrepo *UserRepository) FindUserByEmail(email string) (models.User, error) {
-	userMap := usrepo.storage.Users
+func (r *UserRepository) FindUserByEmail(email string) (models.User, error) {
+	userMap := r.storage.Users
 	for _, value := range userMap {
 		if value.Email == email {
 			return value, nil
 		}
 	}
 	return models.User{}, ErrNotFound
+}
+
+func (r *UserRepository) FindAllUsers() ([]models.User, error) {
+	usersSlice := make([]models.User, 0, len(r.storage.Users))
+	for _, user := range r.storage.Users {
+		usersSlice = append(usersSlice, user)
+	}
+	return usersSlice, nil
+}
+
+func (r *UserRepository) DeleteUser(id uint) error {
+	userMap := r.storage.Users
+	if _, ok := userMap[id]; !ok {
+		return ErrNotFound
+	}
+	delete(userMap, id)
+	return nil
 }
