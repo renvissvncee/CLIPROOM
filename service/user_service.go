@@ -16,6 +16,8 @@ func NewUserService(p_repositroy *repository.UserRepository) *UserService {
 	return &UserService{userRepository: p_repositroy}
 }
 
+// ХЕЛПЕР-функции
+
 func (usserv *UserService) userIsTaken(find func() (models.User, error), excludeId uint) (bool, error) {
 	user, err := find()
 	if errors.Is(err, repository.ErrNotFound) {
@@ -25,6 +27,43 @@ func (usserv *UserService) userIsTaken(find func() (models.User, error), exclude
 		return false, err
 	}
 	return user.ID != excludeId, nil
+}
+
+func (usserv *UserService) ensureLoginFree(login string, excludeId uint) error {
+	taken, err := usserv.userIsTaken(func() (models.User, error) {
+		return usserv.userRepository.FindUserByLogin(login)
+	}, excludeId)
+
+	if err != nil {
+		return err
+	} else if taken {
+		return ErrLoginTaken
+	}
+	return nil
+}
+
+func (usserv *UserService) ensureEmailFree(email string, excludeId uint) error {
+	taken, err := usserv.userIsTaken(func() (models.User, error) {
+		return usserv.userRepository.FindUserByEmail(email)
+	}, excludeId)
+
+	if err != nil {
+		return err
+	} else if taken {
+		return ErrLoginTaken
+	}
+	return nil
+}
+
+func (usserv *UserService) fetchUser(find func() (models.User, error)) (models.User, error) {
+	user, err := find()
+	if errors.Is(err, repository.ErrNotFound) {
+		return models.User{}, ErrUserNotFound
+	}
+	if err != nil {
+		return models.User{}, err
+	}
+	return user, nil
 }
 
 // VALIDATE-функции
@@ -88,24 +127,16 @@ func (usserv *UserService) CreateUser(login, password, email, name string, age u
 		return models.User{}, err
 	}
 
-	id := usserv.userRepository.NextUserId()
 	// Проверка уникальности:
-	if ok, err := usserv.userIsTaken(func() (models.User, error) {
-		return usserv.userRepository.FindUserByLogin(login)
-	}, id); ok == false && err != nil {
+	if err := usserv.ensureLoginFree(login, noExcludeId); err != nil {
 		return models.User{}, err
-	} else if ok == true && err == nil {
-		return models.User{}, ErrLoginTaken
 	}
 
-	if ok, err := usserv.userIsTaken(func() (models.User, error) {
-		return usserv.userRepository.FindUserByEmail(email)
-	}, id); ok == false && err != nil {
+	if err := usserv.ensureEmailFree(email, noExcludeId); err != nil {
 		return models.User{}, err
-	} else if ok == true && err == nil {
-		return models.User{}, ErrEmailTaken
 	}
 
+	id := usserv.userRepository.NextUserId()
 	newUser := models.User{
 		ID:       id,
 		Login:    login,
@@ -123,17 +154,6 @@ func (usserv *UserService) CreateUser(login, password, email, name string, age u
 }
 
 // READ-функции
-
-func (usserv *UserService) fetchUser(find func() (models.User, error)) (models.User, error) {
-	user, err := find()
-	if errors.Is(err, repository.ErrNotFound) {
-		return models.User{}, ErrUserNotFound
-	}
-	if err != nil {
-		return models.User{}, err
-	}
-	return user, nil
-}
 
 func (usserv *UserService) GetUserByLogin(login string) (models.User, error) {
 	// Валидация полученного логина
@@ -170,7 +190,10 @@ func (usserv *UserService) GetUserByEmail(email string) (models.User, error) {
 
 // UPDATE-функции
 
-func (usserv *UserService) UpdateUserInfo(id uint, newLogin, newEmail, newName *string, newAge *uint) (models.User, error) {
+func (usserv *UserService) UpdateUserInfo(id uint,
+	newLogin, newEmail, newName *string,
+	newAge *uint,
+) (models.User, error) {
 	// Получим копию юзера, которую будем менять
 	user, err := usserv.userRepository.FindUserById(id)
 	if err != nil {
@@ -182,10 +205,21 @@ func (usserv *UserService) UpdateUserInfo(id uint, newLogin, newEmail, newName *
 		if err := usserv.validateLogin(*newLogin); err != nil {
 			return models.User{}, err
 		}
+
+		// Проверка уникальности:
+		if err := usserv.ensureLoginFree(*newLogin, noExcludeId); err != nil {
+			return models.User{}, err
+		}
+
 		user.Login = *newLogin
 	}
 	if newEmail != nil {
 		if err := usserv.validateEmail(*newEmail); err != nil {
+			return models.User{}, err
+		}
+
+		// Проверка уникальности:
+		if err := usserv.ensureEmailFree(*newEmail, noExcludeId); err != nil {
 			return models.User{}, err
 		}
 		user.Email = *newEmail
@@ -203,24 +237,9 @@ func (usserv *UserService) UpdateUserInfo(id uint, newLogin, newEmail, newName *
 		user.Age = *newAge
 	}
 
-	// Проверка уникальности:
-	if ok, err := usserv.userIsTaken(func() (models.User, error) {
-		return usserv.userRepository.FindUserByLogin(*newLogin)
-	}, id); ok == false && err != nil {
+	if err := usserv.userRepository.SaveUser(&user); err != nil {
 		return models.User{}, err
-	} else if ok == true && err == nil {
-		return models.User{}, ErrLoginTaken
 	}
-
-	if ok, err := usserv.userIsTaken(func() (models.User, error) {
-		return usserv.userRepository.FindUserByEmail(*newEmail)
-	}, id); ok == false && err != nil {
-		return models.User{}, err
-	} else if ok == true && err == nil {
-		return models.User{}, ErrEmailTaken
-	}
-
-	usserv.userRepository.SaveUser(&user)
 
 	return user, nil
 }
