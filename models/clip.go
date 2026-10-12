@@ -8,8 +8,8 @@ type Clip struct {
 
 	Likes uint
 
-	Tags  []string
-	Moods []string
+	Tags  []Tag
+	Moods []Mood
 
 	Link string
 }

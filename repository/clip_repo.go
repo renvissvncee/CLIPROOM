@@ -41,20 +41,35 @@ func (r *ClipRepository) FindClipById(id uint) (models.Clip, error) {
 	return models.Clip{}, ErrNotFound
 }
 
-func (r *ClipRepository) FindClipByTitle(title string) (models.Clip, error) {
-	clipMap := r.storage.Clips
-	for _, value := range clipMap {
+func (r *ClipRepository) FindClipByTitle(title string) ([]models.Clip, error) {
+	clipSlice := []models.Clip{}
+	for _, value := range r.storage.Clips {
 		if value.Title == title {
-			return value, nil
+			clipSlice = append(clipSlice, value)
 		}
 	}
-	return models.Clip{}, ErrNotFound
+	if len(clipSlice) == 0 {
+		return []models.Clip{}, ErrNotFound
+	}
+	return clipSlice, nil
 }
 
-func (r *ClipRepository) FindClipByArtist(artist string) (models.Clip, error) {
-	clipMap := r.storage.Clips
-	for _, value := range clipMap {
+func (r *ClipRepository) FindClipByArtist(artist string) ([]models.Clip, error) {
+	clipSlice := []models.Clip{}
+	for _, value := range r.storage.Clips {
 		if value.Artist == artist {
+			clipSlice = append(clipSlice, value)
+		}
+	}
+	if len(clipSlice) == 0 {
+		return []models.Clip{}, ErrNotFound
+	}
+	return clipSlice, nil
+}
+
+func (r *ClipRepository) FindClipByArtistAndTitle(artist string, title string) (models.Clip, error) {
+	for _, value := range r.storage.Clips {
+		if value.Artist == artist && value.Title == title {
 			return value, nil
 		}
 	}

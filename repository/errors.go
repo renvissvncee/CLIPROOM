@@ -2,4 +2,4 @@ package repository
 
 import "errors"
 
-var ErrNotFound = errors.New("не найдено")
+var ErrNotFound = errors.New("not found")

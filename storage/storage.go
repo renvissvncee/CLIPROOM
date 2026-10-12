@@ -18,9 +18,9 @@ type Storage struct {
 
 func NewStorage() *Storage {
 	return &Storage{
-		Users:      map[uint]models.User{},
-		Clips:      map[uint]models.Clip{},
-		UserClips:  map[uint]uint{},
+		Users: map[uint]models.User{},
+		Clips: map[uint]models.Clip{},
+		// UserClips:  map[uint]uint{},
 		nextUserId: 1,
 		nextClipId: 1,
 	}

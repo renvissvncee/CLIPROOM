@@ -4,6 +4,7 @@ import (
 	"cliproom/models"
 	"cliproom/repository"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -18,7 +19,7 @@ func NewUserService(p_repositroy *repository.UserRepository) *UserService {
 
 // ХЕЛПЕР-функции
 
-func (s *UserService) userIsTaken(find func() (models.User, error), excludeId uint) (bool, error) {
+func userIsTaken(find func() (models.User, error), excludeId uint) (bool, error) {
 	user, err := find()
 	if errors.Is(err, repository.ErrNotFound) {
 		return false, nil
@@ -30,7 +31,7 @@ func (s *UserService) userIsTaken(find func() (models.User, error), excludeId ui
 }
 
 func (s *UserService) ensureLoginFree(login string, excludeId uint) error {
-	taken, err := s.userIsTaken(func() (models.User, error) {
+	taken, err := userIsTaken(func() (models.User, error) {
 		return s.userRepository.FindUserByLogin(login)
 	}, excludeId)
 
@@ -43,7 +44,7 @@ func (s *UserService) ensureLoginFree(login string, excludeId uint) error {
 }
 
 func (s *UserService) ensureEmailFree(email string, excludeId uint) error {
-	taken, err := s.userIsTaken(func() (models.User, error) {
+	taken, err := userIsTaken(func() (models.User, error) {
 		return s.userRepository.FindUserByEmail(email)
 	}, excludeId)
 
@@ -55,7 +56,7 @@ func (s *UserService) ensureEmailFree(email string, excludeId uint) error {
 	return nil
 }
 
-func (s *UserService) fetchUser(find func() (models.User, error)) (models.User, error) {
+func fetchUser(find func() (models.User, error)) (models.User, error) {
 	user, err := find()
 	if errors.Is(err, repository.ErrNotFound) {
 		return models.User{}, ErrUserNotFound
@@ -68,42 +69,47 @@ func (s *UserService) fetchUser(find func() (models.User, error)) (models.User, 
 
 // VALIDATE-функции
 
-func (s *UserService) validateLogin(login string) error {
+func validateLogin(login string) error {
 	if login == "" {
-		return errors.New("Логин не может быть пустым")
-	} else if len(login) < 3 || len(login) > 30 {
-		return errors.New("Логин должен быть верной длины: 3 <= login <= 30")
+		return fmt.Errorf("%w: is empty", ErrInvalidLogin)
+	}
+	if len(login) < 3 {
+		return fmt.Errorf("%w: too short, min 3 chars", ErrInvalidLogin)
+	}
+	if len(login) > 30 {
+		return fmt.Errorf("%w: too long, max 30 chars", ErrInvalidLogin)
 	}
 	return nil
 }
 
-func (s *UserService) validateEmail(email string) error {
+func validateEmail(email string) error {
 	if email == "" {
-		return errors.New("Эл. почта не может быть пустой")
-	} else if !strings.Contains(email, "@") {
-		return errors.New("Неверный формат эл. почты")
+		return fmt.Errorf("%w: is empty", ErrInvalidEmail)
+	}
+	if !strings.Contains(email, "@") {
+		return fmt.Errorf("%w: wrong format (must be ___@_._)", ErrInvalidEmail)
 	}
 	return nil
 }
 
-func (s *UserService) validatePassword(password string) error {
+func validatePassword(password string) error {
 	if password == "" {
-		return errors.New("Пароль не может быть пустым")
+		return fmt.Errorf("%w: is empty", ErrInvalidPassword)
 	} else if len(password) < 3 {
-		return errors.New("Пароль не может быть меньше 3 символов")
+		return fmt.Errorf("%w: too short, min 3 chars", ErrInvalidPassword)
 	}
 	return nil
 }
 
-func (s *UserService) validateName(name string) error {
+func validateName(name string) error {
 	if strings.ContainsAny(name, "0123456789!@#$%^&*()_+~`./,{}[];:<>") {
-		return errors.New("Имя не должно содержать чисел и(или) специальных символов")
+		return fmt.Errorf("%w: contains prohibited characters (0123456789!@#$%^&*()_+~`./,{}[];:<>)", ErrInvalidName)
 	}
 	return nil
 }
 
 // Пока пустой, потому что любой возраст подходит
-func (s *UserService) validateAge(age uint) error {
+func validateAge(age uint) error {
 	return nil
 }
 
@@ -111,19 +117,19 @@ func (s *UserService) validateAge(age uint) error {
 
 func (s *UserService) CreateUser(login, password, email, name string, age uint) (models.User, error) {
 	// Валидация логина
-	if err := s.validateLogin(login); err != nil {
+	if err := validateLogin(login); err != nil {
 		return models.User{}, err
 	}
 	// Валидация пароля
-	if err := s.validatePassword(password); err != nil {
+	if err := validatePassword(password); err != nil {
 		return models.User{}, err
 	}
 	// Валидация почты
-	if err := s.validateEmail(email); err != nil {
+	if err := validateEmail(email); err != nil {
 		return models.User{}, err
 	}
 	// Валидация имени
-	if err := s.validateName(name); err != nil {
+	if err := validateName(name); err != nil {
 		return models.User{}, err
 	}
 
@@ -157,11 +163,11 @@ func (s *UserService) CreateUser(login, password, email, name string, age uint) 
 
 func (s *UserService) GetUserByLogin(login string) (models.User, error) {
 	// Валидация полученного логина
-	if err := s.validateLogin(login); err != nil {
+	if err := validateLogin(login); err != nil {
 		return models.User{}, err
 	}
 
-	return s.fetchUser(func() (models.User, error) {
+	return fetchUser(func() (models.User, error) {
 		return s.userRepository.FindUserByLogin(login)
 	})
 }
@@ -172,18 +178,18 @@ func (s *UserService) GetUserById(id uint) (models.User, error) {
 		return models.User{}, errors.New("Id не может быть равен 0")
 	}
 
-	return s.fetchUser(func() (models.User, error) {
+	return fetchUser(func() (models.User, error) {
 		return s.userRepository.FindUserById(id)
 	})
 }
 
 func (s *UserService) GetUserByEmail(email string) (models.User, error) {
 	// Валидация полученной эл. почты
-	if err := s.validateEmail(email); err != nil {
+	if err := validateEmail(email); err != nil {
 		return models.User{}, err
 	}
 
-	return s.fetchUser(func() (models.User, error) {
+	return fetchUser(func() (models.User, error) {
 		return s.userRepository.FindUserByEmail(email)
 	})
 }
@@ -206,7 +212,7 @@ func (s *UserService) UpdateUserInfo(id uint,
 
 	// Валидация поступивших данных
 	if newLogin != nil {
-		if err := s.validateLogin(*newLogin); err != nil {
+		if err := validateLogin(*newLogin); err != nil {
 			return models.User{}, err
 		}
 
@@ -218,7 +224,7 @@ func (s *UserService) UpdateUserInfo(id uint,
 		user.Login = *newLogin
 	}
 	if newEmail != nil {
-		if err := s.validateEmail(*newEmail); err != nil {
+		if err := validateEmail(*newEmail); err != nil {
 			return models.User{}, err
 		}
 
@@ -229,13 +235,13 @@ func (s *UserService) UpdateUserInfo(id uint,
 		user.Email = *newEmail
 	}
 	if newName != nil {
-		if err := s.validateName(*newName); err != nil {
+		if err := validateName(*newName); err != nil {
 			return models.User{}, err
 		}
 		user.Name = *newName
 	}
 	if newAge != nil {
-		if err := s.validateAge(*newAge); err != nil {
+		if err := validateAge(*newAge); err != nil {
 			return models.User{}, err
 		}
 		user.Age = *newAge
