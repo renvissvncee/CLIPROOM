@@ -205,16 +205,16 @@ func (s *ClipService) GetClipById(id uint) (models.Clip, error) {
 
 }
 
-// func (s *ClipService) GetClipByEmail(email string) (models.Clip, error) {
-// 	// Валидация полученной эл. почты
-// 	if err := s.validateEmail(email); err != nil {
-// 		return models.Clip{}, err
-// 	}
+func (s *ClipService) GetClipsByArtist(artist string) ([]models.Clip, error) {
+	// Валидация полученной эл. почты
+	if err := validateArtist(artist); err != nil {
+		return []models.Clip{}, err
+	}
 
-// 	return s.fetchClip(func() (models.Clip, error) {
-// 		return s.clipRepository.FindClipByEmail(email)
-// 	})
-// }
+	return fetchClips(func() ([]models.Clip, error) {
+		return s.clipRepository.FindClipsByArtist(artist)
+	})
+}
 
 // func (s *ClipService) GetAllClips() ([]models.Clip, error) {
 // 	return s.clipRepository.FindAllClips()

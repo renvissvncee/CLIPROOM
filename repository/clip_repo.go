@@ -54,7 +54,7 @@ func (r *ClipRepository) FindClipsByTitle(title string) ([]models.Clip, error) {
 	return clipSlice, nil
 }
 
-func (r *ClipRepository) FindClipByArtist(artist string) ([]models.Clip, error) {
+func (r *ClipRepository) FindClipsByArtist(artist string) ([]models.Clip, error) {
 	clipSlice := []models.Clip{}
 	for _, value := range r.storage.Clips {
 		if value.Artist == artist {
