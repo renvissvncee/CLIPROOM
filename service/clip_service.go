@@ -188,16 +188,22 @@ func (s *ClipService) GetClipsByTitle(title string) ([]models.Clip, error) {
 	})
 }
 
-// func (s *ClipService) GetClipById(id uint) (models.Clip, error) {
-// 	// Валидация полученного Id
-// 	if id == 0 {
-// 		return models.Clip{}, errors.New("Id не может быть равен 0")
-// 	}
+func (s *ClipService) GetClipById(id uint) (models.Clip, error) {
+	// Валидация полученного Id
+	if id == 0 {
+		return models.Clip{}, errors.New("invalid id (0)")
+	}
 
-// 	return s.fetchClip(func() (models.Clip, error) {
-// 		return s.clipRepository.FindClipById(id)
-// 	})
-// }
+	clip, err := s.clipRepository.FindClipById(id)
+	if errors.Is(err, repository.ErrNotFound) {
+		return models.Clip{}, ErrClipNotFound
+	}
+	if err != nil {
+		return models.Clip{}, err
+	}
+	return clip, nil
+
+}
 
 // func (s *ClipService) GetClipByEmail(email string) (models.Clip, error) {
 // 	// Валидация полученной эл. почты

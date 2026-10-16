@@ -35,5 +35,5 @@ func main() {
 		[]string{"energetic"},
 	))
 
-	fmt.Println(clipService.GetClipsByTitle("POWER"))
+	fmt.Println(clipService.GetClipById(3))
 }
