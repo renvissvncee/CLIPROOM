@@ -21,7 +21,7 @@ func NewClipService(p_repositroy *repository.ClipRepository) *ClipService {
 func (s *ClipService) clipIsExists(artist string, title string) (bool, error) {
 	_, err := s.clipRepository.FindClipByArtistAndTitle(artist, title)
 	if errors.Is(err, repository.ErrNotFound) {
-		return true, nil
+		return false, nil
 	}
 	if err != nil {
 		return false, err
