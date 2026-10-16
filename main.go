@@ -35,5 +35,5 @@ func main() {
 		[]string{"energetic"},
 	))
 
-	fmt.Println(clipService.GetClipsByArtist("Kanye West"))
+	fmt.Println(clipService.GetAllClips())
 }

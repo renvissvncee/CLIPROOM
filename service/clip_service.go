@@ -216,9 +216,9 @@ func (s *ClipService) GetClipsByArtist(artist string) ([]models.Clip, error) {
 	})
 }
 
-// func (s *ClipService) GetAllClips() ([]models.Clip, error) {
-// 	return s.clipRepository.FindAllClips()
-// }
+func (s *ClipService) GetAllClips() ([]models.Clip, error) {
+	return s.clipRepository.FindAllClips()
+}
 
 // // UPDATE-функции
 
