@@ -41,7 +41,7 @@ func (r *ClipRepository) FindClipById(id uint) (models.Clip, error) {
 	return models.Clip{}, ErrNotFound
 }
 
-func (r *ClipRepository) FindClipByTitle(title string) ([]models.Clip, error) {
+func (r *ClipRepository) FindClipsByTitle(title string) ([]models.Clip, error) {
 	clipSlice := []models.Clip{}
 	for _, value := range r.storage.Clips {
 		if value.Title == title {

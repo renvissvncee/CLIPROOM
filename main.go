@@ -27,11 +27,13 @@ func main() {
 	))
 
 	fmt.Println(clipService.CreateClip(
-		"Homecoming",
-		"Kanye West",
+		"POWER",
+		"Drake",
 		"",
 		"abc.ru",
 		[]string{"hip-hop"},
 		[]string{"energetic"},
 	))
+
+	fmt.Println(clipService.GetClipsByTitle("POWER"))
 }

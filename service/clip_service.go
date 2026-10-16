@@ -55,16 +55,16 @@ func (s *ClipService) clipIsExists(artist string, title string) (bool, error) {
 // 	return nil
 // }
 
-// func fetchClip(find func() (models.Clip, error)) (models.Clip, error) {
-// 	clip, err := find()
-// 	if errors.Is(err, repository.ErrNotFound) {
-// 		return models.Clip{}, ErrClipNotFound
-// 	}
-// 	if err != nil {
-// 		return models.Clip{}, err
-// 	}
-// 	return clip, nil
-// }
+func fetchClips(find func() ([]models.Clip, error)) ([]models.Clip, error) {
+	clips, err := find()
+	if errors.Is(err, repository.ErrNotFound) {
+		return []models.Clip{}, ErrClipNotFound
+	}
+	if err != nil {
+		return []models.Clip{}, err
+	}
+	return clips, nil
+}
 
 // VALIDATE-функции
 
@@ -175,18 +175,18 @@ func (s *ClipService) CreateClip(title, artist, description, link string, tagsRa
 	return newClip, nil
 }
 
-// // READ-функции
+// READ-функции
 
-// func (s *ClipService) GetClipByLogin(login string) (models.Clip, error) {
-// 	// Валидация полученного логина
-// 	if err := s.validateLogin(login); err != nil {
-// 		return models.Clip{}, err
-// 	}
+func (s *ClipService) GetClipsByTitle(title string) ([]models.Clip, error) {
+	// Валидация полученного логина
+	if err := validateTitle(title); err != nil {
+		return []models.Clip{}, err
+	}
 
-// 	return s.fetchClip(func() (models.Clip, error) {
-// 		return s.clipRepository.FindClipByLogin(login)
-// 	})
-// }
+	return fetchClips(func() ([]models.Clip, error) {
+		return s.clipRepository.FindClipsByTitle(title)
+	})
+}
 
 // func (s *ClipService) GetClipById(id uint) (models.Clip, error) {
 // 	// Валидация полученного Id
