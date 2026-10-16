@@ -25,8 +25,8 @@ func (r *UserRepository) SaveUser(user *models.User) error {
 	if user == nil {
 		return errors.New("Ссылка на пользователя не найдена")
 	}
-	if user.ID <= 0 {
-		return errors.New("Id пользователя не может быть <= 0")
+	if user.ID == 0 {
+		return errors.New("Id пользователя не может быть равно 0")
 	}
 	r.storage.Users[user.ID] = *user
 	return nil
