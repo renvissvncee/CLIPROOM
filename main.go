@@ -27,11 +27,20 @@ func main() {
 	))
 
 	fmt.Println(clipService.CreateClip(
-		"Homecoming",
-		"Kanye West",
+		"POWER",
+		"Drake",
 		"",
 		"abc.ru",
 		[]string{"hip-hop"},
 		[]string{"energetic"},
 	))
+
+	fmt.Println(clipService.GetAllClips())
+	newVar := "jdgsjdjrg.ru"
+	var newTagsRaw []string = []string{"rock", "jazz"}
+	var newMoodsRaw []string = []string{"dark", "sad"}
+	fmt.Println(clipService.UpdateClipInfo(1, nil, nil, nil, &newVar, newTagsRaw, newMoodsRaw))
+	fmt.Println(clipService.DeleteClip(0))
+	fmt.Println(clipService.GetAllClips())
+
 }

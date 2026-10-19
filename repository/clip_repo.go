@@ -41,7 +41,7 @@ func (r *ClipRepository) FindClipById(id uint) (models.Clip, error) {
 	return models.Clip{}, ErrNotFound
 }
 
-func (r *ClipRepository) FindClipByTitle(title string) ([]models.Clip, error) {
+func (r *ClipRepository) FindClipsByTitle(title string) ([]models.Clip, error) {
 	clipSlice := []models.Clip{}
 	for _, value := range r.storage.Clips {
 		if value.Title == title {
@@ -54,7 +54,7 @@ func (r *ClipRepository) FindClipByTitle(title string) ([]models.Clip, error) {
 	return clipSlice, nil
 }
 
-func (r *ClipRepository) FindClipByArtist(artist string) ([]models.Clip, error) {
+func (r *ClipRepository) FindClipsByArtist(artist string) ([]models.Clip, error) {
 	clipSlice := []models.Clip{}
 	for _, value := range r.storage.Clips {
 		if value.Artist == artist {
@@ -87,10 +87,9 @@ func (r *ClipRepository) FindAllClips() ([]models.Clip, error) {
 // DELETE-функции
 
 func (r *ClipRepository) DeleteClip(id uint) error {
-	clipMap := r.storage.Clips
-	if _, ok := clipMap[id]; !ok {
+	if _, ok := r.storage.Clips[id]; !ok {
 		return ErrNotFound
 	}
-	delete(clipMap, id)
+	delete(r.storage.Clips, id)
 	return nil
 }
