@@ -220,61 +220,79 @@ func (s *ClipService) GetAllClips() ([]models.Clip, error) {
 	return s.clipRepository.FindAllClips()
 }
 
-// // UPDATE-функции
+// UPDATE-функции
 
-// func (s *ClipService) UpdateClipInfo(id uint,
-// 	newLogin, newEmail, newName *string,
-// 	newAge *uint,
-// ) (models.Clip, error) {
-// 	// Получим копию юзера, которую будем менять
-// 	clip, err := s.clipRepository.FindClipById(id)
-// 	if err != nil {
-// 		return models.Clip{}, err
-// 	}
+func (s *ClipService) UpdateClipInfo(id uint,
+	newTitle, newArtist, newDescription, newLink *string,
+	newTagsRaw []string, newMoodsRaw []string,
+) (models.Clip, error) {
+	// Получим копию юзера, которую будем менять
+	clip, err := s.clipRepository.FindClipById(id)
+	if errors.Is(err, repository.ErrNotFound) {
+		return models.Clip{}, ErrClipNotFound
+	}
+	if err != nil {
+		return models.Clip{}, err
+	}
 
-// 	// Валидация поступивших данных
-// 	if newLogin != nil {
-// 		if err := s.validateLogin(*newLogin); err != nil {
-// 			return models.Clip{}, err
-// 		}
+	// Валидация полученных данных
+	if newTitle == nil {
+		newTitle = &(clip.Title)
+	}
+	if newArtist == nil {
+		newArtist = &(clip.Artist)
+	}
+	if err := validateTitle(*newTitle); err != nil {
+		return models.Clip{}, err
+	}
+	if err := validateArtist(*newArtist); err != nil {
+		return models.Clip{}, err
+	}
+	if *newTitle != clip.Title || *newArtist != clip.Artist {
+		exists, err := s.clipIsExists(*newArtist, *newTitle)
+		if err != nil {
+			return models.Clip{}, err
+		}
+		if exists {
+			return models.Clip{}, ErrClipExists
+		}
+	}
+	clip.Artist = *newArtist
+	clip.Title = *newTitle
 
-// 		// Проверка уникальности:
-// 		if err := s.ensureLoginFree(*newLogin, id); err != nil {
-// 			return models.Clip{}, err
-// 		}
+	if newDescription != nil {
+		if err := validateDescription(*newDescription); err != nil {
+			return models.Clip{}, err
+		}
+		clip.Description = *newDescription
+	}
+	if newLink != nil {
+		if err := validateLink(*newLink); err != nil {
+			return models.Clip{}, err
+		}
+		clip.Link = *newLink
+	}
+	if newTagsRaw != nil {
+		newTags, err := parseTags(newTagsRaw)
+		if err != nil {
+			return models.Clip{}, err
+		}
+		clip.Tags = newTags
+	}
+	if newMoodsRaw != nil {
+		newMoods, err := parseMoods(newMoodsRaw)
+		if err != nil {
+			return models.Clip{}, err
+		}
+		clip.Moods = newMoods
+	}
 
-// 		clip.Login = *newLogin
-// 	}
-// 	if newEmail != nil {
-// 		if err := s.validateEmail(*newEmail); err != nil {
-// 			return models.Clip{}, err
-// 		}
+	if err := s.clipRepository.SaveClip(&clip); err != nil {
+		return models.Clip{}, err
+	}
 
-// 		// Проверка уникальности:
-// 		if err := s.ensureEmailFree(*newEmail, id); err != nil {
-// 			return models.Clip{}, err
-// 		}
-// 		clip.Email = *newEmail
-// 	}
-// 	if newName != nil {
-// 		if err := s.validateName(*newName); err != nil {
-// 			return models.Clip{}, err
-// 		}
-// 		clip.Name = *newName
-// 	}
-// 	if newAge != nil {
-// 		if err := s.validateAge(*newAge); err != nil {
-// 			return models.Clip{}, err
-// 		}
-// 		clip.Age = *newAge
-// 	}
-
-// 	if err := s.clipRepository.SaveClip(&clip); err != nil {
-// 		return models.Clip{}, err
-// 	}
-
-// 	return clip, nil
-// }
+	return clip, nil
+}
 
 // // DELETE-функции
 
