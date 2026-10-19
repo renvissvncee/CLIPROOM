@@ -40,4 +40,7 @@ func main() {
 	var newTagsRaw []string = []string{"rock", "jazz"}
 	var newMoodsRaw []string = []string{"dark", "sad"}
 	fmt.Println(clipService.UpdateClipInfo(1, nil, nil, nil, &newVar, newTagsRaw, newMoodsRaw))
+	fmt.Println(clipService.DeleteClip(0))
+	fmt.Println(clipService.GetAllClips())
+
 }

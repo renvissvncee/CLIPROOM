@@ -87,10 +87,9 @@ func (r *ClipRepository) FindAllClips() ([]models.Clip, error) {
 // DELETE-функции
 
 func (r *ClipRepository) DeleteClip(id uint) error {
-	clipMap := r.storage.Clips
-	if _, ok := clipMap[id]; !ok {
+	if _, ok := r.storage.Clips[id]; !ok {
 		return ErrNotFound
 	}
-	delete(clipMap, id)
+	delete(r.storage.Clips, id)
 	return nil
 }

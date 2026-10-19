@@ -294,18 +294,18 @@ func (s *ClipService) UpdateClipInfo(id uint,
 	return clip, nil
 }
 
-// // DELETE-функции
+// DELETE-функции
 
-// func (s *ClipService) DeleteClip(id uint) error {
-// 	if id == 0 {
-// 		return errors.New("ID не может быть 0")
-// 	}
-// 	err := s.clipRepository.DeleteClip(id)
-// 	if errors.Is(err, repository.ErrNotFound) {
-// 		return ErrClipNotFound
-// 	}
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
+func (s *ClipService) DeleteClip(id uint) error {
+	if id == 0 {
+		return errors.New("ID не может быть 0")
+	}
+	err := s.clipRepository.DeleteClip(id)
+	if errors.Is(err, repository.ErrNotFound) {
+		return ErrClipNotFound
+	}
+	if err != nil {
+		return err
+	}
+	return nil
+}
